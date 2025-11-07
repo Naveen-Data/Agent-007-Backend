@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+httpx
+pydantic
+pydantic-settings
+langchain>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-chroma
+langgraph>=1.0.0
+langsmith
+chromadb
+numpy
+sqlmodel
+aiofiles
+requests
+protobuf>=4.21.0,<5.0.0
