@@ -2,9 +2,10 @@
 
 import pytest
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 import sys
 import os
+
 
 # Add app directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -65,8 +66,8 @@ class TestToolService:
         assert weather_tool.name == "weather"
         assert weather_tool.description is not None
         
-    @patch('httpx.Client')
-    def test_weather_tool_mock_response(self, mock_client):
+    @patch("app.tools.weather.httpx.request")
+    def test_weather_tool_mock_response(self, mock_request):
         """Test weather tool with mocked response"""
         # Mock HTTP response
         mock_response = Mock()
@@ -89,18 +90,16 @@ class TestToolService:
             }]
         }
         mock_response.raise_for_status.return_value = None
-        
-        mock_context = Mock()
-        mock_context.__enter__.return_value.get.return_value = mock_response
-        mock_client.return_value = mock_context
-        
+
+        # Make httpx.request(...) return the mocked response
+        mock_request.return_value = mock_response
+
         weather_tool = WeatherTool()
         result = weather_tool._run("Test Location")
-        
+
         assert "Test City" in result
         assert "Clear" in result
         assert "20°C" in result
-
 class TestAgentService:
     """Test agent service functionality"""
     

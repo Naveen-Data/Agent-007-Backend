@@ -1,65 +1,74 @@
-import json
+# app/tools/weather.py
+import logging
 from typing import Any, Dict
 
 import httpx
 
 from app.tools.base import ToolSpec
 
+logger = logging.getLogger("app.tools.weather")
+
 
 class WeatherTool(ToolSpec):
-
     def __init__(self):
         super().__init__()
         self.name = "weather"
-        self.description = "Get current weather information for a location"
+        self.description = "Get current weather information for a location (uses wttr.in)"
 
     def _run(self, location: str) -> str:
-        """Get weather for a given location using wttr.in service"""
+        """Get weather for a given location using wttr.in service."""
         try:
-            # Clean and encode the location properly
-            location = location.strip()
+            location = (location or "").strip()
             if not location:
                 return "Error: Location is required"
 
-            # Use wttr.in - a free weather service that doesn't require API key
             url = f"https://wttr.in/{location}"
             params = {"format": "j1"}  # JSON format
 
-            with httpx.Client(timeout=10.0) as client:
-                response = client.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
+            # Use httpx.request (no context-manager) to make mocking in tests simpler
+            resp = httpx.request("GET", url, params=params, timeout=10.0)
+            resp.raise_for_status()
 
-                # Extract current weather
-                current = data["current_condition"][0]
-                weather_desc = current["weatherDesc"][0]["value"]
-                temp_c = current["temp_C"]
-                temp_f = current["temp_F"]
-                humidity = current["humidity"]
-                wind_speed = current["windspeedKmph"]
-                wind_dir = current["winddir16Point"]
+            data = resp.json()
 
-                # Get location info
-                nearest_area = data["nearest_area"][0]
-                area_name = nearest_area["areaName"][0]["value"]
-                country = nearest_area["country"][0]["value"]
+            # Defensive access to keys (KeyError handled below)
+            current = data["current_condition"][0]
+            weather_desc = current.get("weatherDesc", [{}])[0].get("value", "N/A")
+            temp_c = current.get("temp_C", "N/A")
+            temp_f = current.get("temp_F", "N/A")
+            humidity = current.get("humidity", "N/A")
+            wind_speed = current.get("windspeedKmph", "N/A")
+            wind_dir = current.get("winddir16Point", "N/A")
 
-                result = f"Weather for {area_name}, {country}:\n"
-                result += f"Condition: {weather_desc}\n"
-                result += f"Temperature: {temp_c}°C ({temp_f}°F)\n"
-                result += f"Humidity: {humidity}%\n"
-                result += f"Wind: {wind_speed} km/h {wind_dir}\n"
+            nearest_area = data.get("nearest_area", [{}])[0]
+            area_name = nearest_area.get("areaName", [{}])[0].get("value", location)
+            country = nearest_area.get("country", [{}])[0].get("value", "N/A")
 
-                # Add today's forecast
-                today = data["weather"][0]
-                result += f"\nToday's forecast:\n"
-                result += f"Max: {today['maxtempC']}°C | Min: {today['mintempC']}°C\n"
+            result_lines = [
+                f"Weather for {area_name}, {country}:",
+                f"Condition: {weather_desc}",
+                f"Temperature: {temp_c}°C ({temp_f}°F)",
+                f"Humidity: {humidity}%",
+                f"Wind: {wind_speed} km/h {wind_dir}",
+            ]
 
-                return result
+            # Today's forecast (defensive)
+            today = data.get("weather", [{}])[0]
+            maxtemp = today.get("maxtempC", "N/A")
+            mintemp = today.get("mintempC", "N/A")
+            result_lines.append("")
+            result_lines.append("Today's forecast:")
+            result_lines.append(f"Max: {maxtemp}°C | Min: {mintemp}°C")
+
+            return "\n".join(result_lines)
 
         except httpx.HTTPStatusError as e:
-            return f"Error fetching weather data: HTTP {e.response.status_code}"
+            status = getattr(e.response, "status_code", "unknown")
+            logger.error("Weather API HTTP error: %s (url=%s)", status, url)
+            return f"Error fetching weather data: HTTP {status}"
         except KeyError as e:
+            logger.exception("Error parsing weather data: missing key %s", e)
             return f"Error parsing weather data: Missing key {e}"
         except Exception as e:
+            logger.exception("Unexpected error in WeatherTool: %s", e)
             return f"Error getting weather: {str(e)}"
