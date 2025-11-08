@@ -120,7 +120,7 @@ jobs:
           echo "${EC2_KEY}" | tr -d '\r' > private_key.pem
           chmod 600 private_key.pem
 
-          eecho "⏳ Waiting for EC2 SSH availability..."
+          echo "⏳ Waiting for EC2 SSH availability..."
           # ensure .ssh dir exists and has correct permissions
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
