@@ -179,7 +179,7 @@ jobs:
           if [ -d "Agent_007_Backend" ]; then
               cd Agent_007_Backend && git pull origin main
           else
-              git clone https://github.com/${GITHUB_REPOSITORY}.git Agent_007_Backend
+              git clone https://github.com/$3.git Agent_007_Backend
               cd Agent_007_Backend
           fi
 
@@ -215,7 +215,7 @@ jobs:
           EOF
 
           scp -i private_key.pem deploy.sh $EC2_USER@$EC2_HOST:/tmp/
-          ssh -i private_key.pem $EC2_USER@$EC2_HOST "chmod +x /tmp/deploy.sh && /tmp/deploy.sh '$GOOGLE_API_KEY' '$LANGCHAIN_API_KEY'"
+          ssh -i private_key.pem $EC2_USER@$EC2_HOST "chmod +x /tmp/deploy.sh && /tmp/deploy.sh '$GOOGLE_API_KEY' '$LANGCHAIN_API_KEY' '${{ github.repository }}'"
 
       - name: 🧪 Post-Deployment Check
         env:
