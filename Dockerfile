@@ -9,30 +9,35 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY ./app ./app
 
-# Create non-root user for security
+# Create non-root user
 RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
 
-# Environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PORT=8000
+# Default environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=8000 \
+    CHROMA_DIR=/app/chroma_db \
+    CHROMA_TELEMETRY_ENABLED=false \
+    LANGCHAIN_TRACING_V2=false \
+    ALLOWED_ORIGINS="*" \
+    BACKEND_PORT=8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/health || exit 1
+# Health check (simplified, reliable)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Expose port
-EXPOSE $PORT
+EXPOSE 8000
 
-# Start command with production settings
+# Start FastAPI app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
