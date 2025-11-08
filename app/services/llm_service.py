@@ -39,8 +39,7 @@ PydanticOutputParser = None
 try:
     # These imports can vary across langchain versions; guard them.
     from langchain_google_genai import ChatGoogleGenerativeAI  # type: ignore
-    from langchain_google_genai import \
-        GoogleGenerativeAIEmbeddings  # type: ignore
+    from langchain_google_genai import GoogleGenerativeAIEmbeddings  # type: ignore
 
     llm_available = True
     embeddings_available = True
@@ -53,11 +52,9 @@ except Exception:
 try:
     # PydanticOutputParser is in newer langchain_core/langchain; try common locations
     try:
-        from langchain_core.output_parsers import \
-            PydanticOutputParser  # type: ignore
+        from langchain_core.output_parsers import PydanticOutputParser  # type: ignore
     except Exception:
-        from langchain.output_parsers import \
-            PydanticOutputParser  # type: ignore
+        from langchain.output_parsers import PydanticOutputParser  # type: ignore
 
     pydantic_parser_available = True
 except Exception:

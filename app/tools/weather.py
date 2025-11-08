@@ -13,7 +13,9 @@ class WeatherTool(ToolSpec):
     def __init__(self):
         super().__init__()
         self.name = "weather"
-        self.description = "Get current weather information for a location (uses wttr.in)"
+        self.description = (
+            "Get current weather information for a location (uses wttr.in)"
+        )
 
     def _run(self, location: str) -> str:
         """Get weather for a given location using wttr.in service."""
