@@ -120,8 +120,21 @@ jobs:
           echo "${EC2_KEY}" | tr -d '\r' > private_key.pem
           chmod 600 private_key.pem
 
-          echo "⏳ Waiting for EC2 SSH availability..."
-          until ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts 2>/dev/null; do sleep 5; done
+          eecho "⏳ Waiting for EC2 SSH availability..."
+          # ensure .ssh dir exists and has correct permissions
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          # try to add host key (loop until ssh-keyscan succeeds)
+          until ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts 2>/dev/null; do
+            echo "ssh-keyscan failed; retrying in 5s..."
+            sleep 5
+          done
+
+          # optional: show the captured known_hosts line for debugging
+          echo "Known hosts entry:"
+          tail -n 5 ~/.ssh/known_hosts || true
+
           echo "✅ SSH ready."
 
           echo "📤 Uploading files..."
