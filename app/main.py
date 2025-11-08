@@ -1,7 +1,8 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-import os
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,10 +19,11 @@ resort.
 """
 
 
-    # Preferred when running from the project root: `uvicorn app.main:app`
+# Preferred when running from the project root: `uvicorn app.main:app`
 from app.config import settings
 from app.logging_config import configure_logging
 from app.routers import chat, mcp_server
+
 # Fallback for running as a top-level module inside `app/` directory
 
 logger = configure_logging()
@@ -37,10 +39,10 @@ else:
         "http://localhost:3000",  # Local development
         "http://localhost:3001",  # Alternative local port
         "https://*.netlify.app",  # Netlify deployments
-        "https://*.vercel.app",   # Vercel deployments
-        "https://*.github.io",    # GitHub Pages
-        "https://*.amazonaws.com", # AWS S3/CloudFront
-        "https://*.awsapprunner.com", # AWS App Runner
+        "https://*.vercel.app",  # Vercel deployments
+        "https://*.github.io",  # GitHub Pages
+        "https://*.amazonaws.com",  # AWS S3/CloudFront
+        "https://*.awsapprunner.com",  # AWS App Runner
     ]
 
 app.add_middleware(
@@ -49,15 +51,17 @@ app.add_middleware(
     allow_credentials=False,  # Set to False for production security
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    allow_origin_regex=r"https://.*(netlify\.app|vercel\.app|github\.io|amazonaws\.com|awsapprunner\.com)$"
+    allow_origin_regex=r"https://.*(netlify\.app|vercel\.app|github\.io|amazonaws\.com|awsapprunner\.com)$",
 )
 
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 app.include_router(mcp_server.router, prefix="/api/mcp", tags=["mcp", "tools"])
 
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 @app.get("/")
 def root():
@@ -68,6 +72,6 @@ def root():
             "chat": "/api/chat/send",
             "mcp": "/api/mcp",
             "tools": "/api/mcp/tools",
-            "docs": "/docs"
-        }
+            "docs": "/docs",
+        },
     }

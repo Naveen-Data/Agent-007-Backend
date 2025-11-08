@@ -8,22 +8,29 @@ except Exception:
     except Exception:
         from .base import ToolSpec
 
+
 class HttpTool(ToolSpec):
-    
+
     def __init__(self):
         super().__init__()
         self.name = "http_tool"
         self.description = "Make HTTP calls: args (method, url, json, params)"
 
-    def _run(self, method: str = "GET", url: str = "", json: dict | None = None, params: dict | None = None) -> str:
+    def _run(
+        self,
+        method: str = "GET",
+        url: str = "",
+        json: dict | None = None,
+        params: dict | None = None,
+    ) -> str:
         if not url:
             return "Error: URL is required"
-        
+
         try:
             with httpx.Client(timeout=10) as client:
                 r = client.request(method=method, url=url, json=json, params=params)
                 r.raise_for_status()
-                
+
                 try:
                     json_data = r.json()
                     return f"HTTP {r.status_code} Response (JSON):\n{json_data}"
