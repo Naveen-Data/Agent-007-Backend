@@ -117,8 +117,36 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           set -e
-          echo "${EC2_KEY}" | tr -d '\r' > private_key.pem
-          chmod 600 private_key.pem
+          # Write SSH private key robustly (handle CRLF, base64, and OPENSSH -> PEM conversion)
+          printf '%s\n' "${EC2_KEY}" | sed 's/\r$//' > private_key.pem || true
+
+          # If the file doesn't contain a PRIVATE KEY header, attempt base64 decode
+          if ! grep -q "PRIVATE KEY" private_key.pem 2>/dev/null; then
+            echo "private_key.pem missing header; attempting base64 decode..."
+            echo "${EC2_KEY}" | tr -d '\r' | base64 --decode > private_key.pem 2>/dev/null || true
+          fi
+
+          # Debug: show the first line of the key (safe) and head for logs (do not reveal entire key)
+          echo "---- private_key.pem head ----"
+          head -n 1 private_key.pem || true
+          echo "---- (end head) ----"
+
+          # Ensure permissions are strict
+          chmod 600 private_key.pem || true
+
+          # If using newer OpenSSH private key format, convert to PEM for compatibility
+          if head -n1 private_key.pem | grep -q "OPENSSH"; then
+            echo "Converting OpenSSH key to PEM format for compatibility..."
+            ssh-keygen -p -m PEM -f private_key.pem -P "" -N "" || true
+            chmod 600 private_key.pem || true
+          fi
+
+          # Quick non-interactive SSH test (won't log in) to show whether key is accepted
+          echo "Testing SSH key connectivity (will not authenticate if key invalid)..."
+          ssh -i private_key.pem -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "${EC2_USER}@${EC2_HOST}" 'echo SSH-OK' 2>&1 | sed -n '1,120p' || true
+
+
+
 
           echo "⏳ Waiting for EC2 SSH availability..."
           # ensure .ssh dir exists and has correct permissions
