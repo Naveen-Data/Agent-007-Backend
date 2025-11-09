@@ -167,7 +167,32 @@ jobs:
 
           echo "📤 Uploading files..."
           scp -i private_key.pem /tmp/agent-007-backend.tar $EC2_USER@$EC2_HOST:/tmp/
-          scp -i private_key.pem .env.production $EC2_USER@$EC2_HOST:/tmp/.env
+          
+          # Generate concrete .env from template + GitHub secrets
+          echo "🔧 Generating final /tmp/.env from .env.production + secrets..."
+
+          cp .env.production /tmp/.env
+
+          # Replace placeholders in /tmp/.env with real secrets and env values
+          sed -i "s|\${GOOGLE_API_KEY}|${{ secrets.GOOGLE_API_KEY }}|g" /tmp/.env
+          sed -i "s|\${LANGCHAIN_API_KEY}|${{ secrets.LANGCHAIN_API_KEY }}|g" /tmp/.env
+          sed -i "s|\${LANGCHAIN_PROJECT}|${{ secrets.LANGCHAIN_PROJECT }}|g" /tmp/.env
+          sed -i "s|\${BACKEND_PORT}|${{ secrets.BACKEND_PORT }}|g" /tmp/.env
+          sed -i "s|\${ALLOWED_ORIGINS}|${{ secrets.ALLOWED_ORIGINS }}|g" /tmp/.env
+          sed -i "s|\${GEMINI_DEFAULT_MODEL}|${{ secrets.GEMINI_DEFAULT_MODEL }}|g" /tmp/.env
+          sed -i "s|\${GEMINI_HEAVY_MODEL}|${{ secrets.GEMINI_HEAVY_MODEL }}|g" /tmp/.env
+          sed -i "s|\${EMBEDDING_MODEL}|${{ secrets.EMBEDDING_MODEL }}|g" /tmp/.env
+          sed -i "s|\${LOG_LEVEL}|${{ secrets.LOG_LEVEL }}|g" /tmp/.env
+          sed -i "s|\${LOG_FORMAT}|${{ secrets.LOG_FORMAT }}|g" /tmp/.env
+          sed -i "s|\${HEALTH_CHECK_INTERVAL}|${{ secrets.HEALTH_CHECK_INTERVAL }}|g" /tmp/.env
+          sed -i "s|\${HEALTH_CHECK_TIMEOUT}|${{ secrets.HEALTH_CHECK_TIMEOUT }}|g" /tmp/.env
+          sed -i "s|\${LANGCHAIN_TRACING_V2}|${{ secrets.LANGCHAIN_TRACING_V2 }}|g" /tmp/.env
+
+          echo "✅ /tmp/.env generated (showing top 10 lines for debug)"
+          head -n 10 /tmp/.env || true
+
+          # Upload it to EC2
+          scp -i private_key.pem /tmp/.env $EC2_USER@$EC2_HOST:/tmp/.env
 
           # Create remote deploy script
           cat > deploy.sh <<'EOF'
