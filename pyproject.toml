@@ -10,3 +10,20 @@ multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0
 combine_as_imports = true
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:google.*:",
+    "ignore::DeprecationWarning:pythonjsonlogger.*:",
+    "ignore:Support for class-based.*:DeprecationWarning:pydantic.*:",
+    "ignore:Type google._upb._message.*:DeprecationWarning:",
+    "ignore:.*PyType_Spec.*:DeprecationWarning:",
+]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]

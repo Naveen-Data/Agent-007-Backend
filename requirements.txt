@@ -15,3 +15,10 @@ sqlmodel
 aiofiles
 requests
 protobuf>=4.21.0,<5.0.0
+
+# Logging and AWS dependencies
+boto3
+watchtower
+structlog
+python-json-logger
+loguru

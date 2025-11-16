@@ -1,3 +1,4 @@
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -16,15 +17,19 @@ class Settings(BaseSettings):
     # Server settings - loaded from .env
     BACKEND_PORT: int = 8000
     ALLOWED_ORIGINS: str = "*"
+    ALLOWED_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS"
+    ALLOWED_HEADERS: str = "*"
 
     # Vectorstore settings - loaded from .env
     CHROMA_DIR: str = "./chroma_db"
     CHROMA_TELEMETRY_ENABLED: bool = False
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "ignore"  # Ignore extra fields in .env
+
+    model_config = ConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"  # Ignore extra fields in .env
+    )
 
 
 settings = Settings()

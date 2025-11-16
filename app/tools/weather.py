@@ -3,6 +3,7 @@ import logging
 from typing import Any, Dict
 
 import httpx
+from urllib.parse import quote
 
 from app.tools.base import ToolSpec
 
@@ -24,7 +25,9 @@ class WeatherTool(ToolSpec):
             if not location:
                 return "Error: Location is required"
 
-            url = f"https://wttr.in/{location}"
+            # Sanitize and URL-encode the location to avoid 404s on phrases like 'Hyderabad today'
+            safe_loc = " ".join(part for part in location.split())  # collapse whitespace
+            url = f"https://wttr.in/{quote(safe_loc)}"
             params = {"format": "j1"}  # JSON format
 
             # Use httpx.request (no context-manager) to make mocking in tests simpler
