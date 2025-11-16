@@ -21,7 +21,9 @@ class LLMInterface(ABC):
     """
 
     @abstractmethod
-    async def generate(self, prompt: str, **kwargs) -> str:  # async to support non-blocking implementations
+    async def generate(
+        self, prompt: str, **kwargs
+    ) -> str:  # async to support non-blocking implementations
         raise NotImplementedError()
 
     @abstractmethod

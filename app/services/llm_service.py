@@ -153,14 +153,16 @@ class LLMService:
                 "LLMService.generate_structured: required dependencies not available",
                 extra={
                     'llm_available': self._llm is not None,
-                    'parser_available': pydantic_parser_available
-                }
+                    'parser_available': pydantic_parser_available,
+                },
             )
-            raise Exception("Required dependencies for structured generation not available")
+            raise Exception(
+                "Required dependencies for structured generation not available"
+            )
 
         parser = PydanticOutputParser(pydantic_object=response_model)
         format_instructions = parser.get_format_instructions()
-        
+
         for attempt in range(max_retries):
             try:
                 # Enhanced prompt with explicit JSON requirement
@@ -171,41 +173,45 @@ IMPORTANT: You must respond with valid JSON that matches the required schema. Do
 {format_instructions}
 
 Respond with valid JSON only:"""
-                
+
                 resp = await asyncio.to_thread(self._llm.invoke, structured_prompt)
                 content = (
                     getattr(resp, "content", None)
                     or getattr(resp, "text", None)
                     or str(resp)
                 ).strip()
-                
+
                 # Try to clean up the response if it has extra text
                 content = self._extract_json_from_response(content)
-                
+
                 parsed = parser.parse(content)
-                logger.debug(f"Structured generation successful on attempt {attempt + 1}")
+                logger.debug(
+                    f"Structured generation successful on attempt {attempt + 1}"
+                )
                 return parsed
-                
+
             except Exception as e:
-                logger.warning(f"Structured generation attempt {attempt + 1}/{max_retries} failed: {e}")
+                logger.warning(
+                    f"Structured generation attempt {attempt + 1}/{max_retries} failed: {e}"
+                )
                 if attempt == max_retries - 1:
                     logger.exception("All structured generation attempts failed")
                     return None
-                    
+
         return None
 
     def _extract_json_from_response(self, content: str) -> str:
         """Extract JSON from response that might contain extra text"""
         import re
         import json
-        
+
         # First, try the content as-is
         try:
             json.loads(content)
             return content
         except:
             pass
-            
+
         # Look for JSON block between { and }
         json_match = re.search(r'\{.*\}', content, re.DOTALL)
         if json_match:
@@ -215,9 +221,11 @@ Respond with valid JSON only:"""
                 return json_str
             except:
                 pass
-        
+
         # Look for code blocks with json
-        code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        code_block_match = re.search(
+            r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL
+        )
         if code_block_match:
             json_str = code_block_match.group(1)
             try:
@@ -225,7 +233,7 @@ Respond with valid JSON only:"""
                 return json_str
             except:
                 pass
-                
+
         # Return original content if no valid JSON found
         return content
 

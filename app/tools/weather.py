@@ -26,7 +26,9 @@ class WeatherTool(ToolSpec):
                 return "Error: Location is required"
 
             # Sanitize and URL-encode the location to avoid 404s on phrases like 'Hyderabad today'
-            safe_loc = " ".join(part for part in location.split())  # collapse whitespace
+            safe_loc = " ".join(
+                part for part in location.split()
+            )  # collapse whitespace
             url = f"https://wttr.in/{quote(safe_loc)}"
             params = {"format": "j1"}  # JSON format
 

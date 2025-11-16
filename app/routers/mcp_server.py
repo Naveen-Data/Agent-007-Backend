@@ -19,25 +19,34 @@ class ToolResponse(BaseModel):
     success: bool
 
 
-
 @router.get("/mcp")
 def mcp_entrypoint(tool_registry: Dict[str, Any] = Depends(get_tool_registry)):
-    return {"message": "MCP server is running!", "tools": {k: getattr(v, 'description', '') for k, v in tool_registry.items()}}
+    return {
+        "message": "MCP server is running!",
+        "tools": {k: getattr(v, 'description', '') for k, v in tool_registry.items()},
+    }
 
 
 @router.get("/mcp/tools")
 def list_tools(tool_registry: Dict[str, Any] = Depends(get_tool_registry)):
     """List all available tools"""
-    return {"tools": {k: getattr(v, 'description', '') for k, v in tool_registry.items()}}
+    return {
+        "tools": {k: getattr(v, 'description', '') for k, v in tool_registry.items()}
+    }
 
 
 @router.post("/mcp/execute", response_model=ToolResponse)
-def execute_tool(request: ToolRequest, tool_registry: Dict[str, Any] = Depends(get_tool_registry)):
+def execute_tool(
+    request: ToolRequest, tool_registry: Dict[str, Any] = Depends(get_tool_registry)
+):
     """Execute a specific tool with parameters"""
     try:
         if request.tool_name not in tool_registry:
             available = ", ".join(tool_registry.keys())
-            raise HTTPException(status_code=404, detail=f"Unknown tool '{request.tool_name}'. Available: {available}")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unknown tool '{request.tool_name}'. Available: {available}",
+            )
 
         tool = tool_registry[request.tool_name]
         if not hasattr(tool, "run"):
@@ -53,7 +62,9 @@ def execute_tool(request: ToolRequest, tool_registry: Dict[str, Any] = Depends(g
             )
 
         # Fallback raw result
-        return ToolResponse(result=str(result), tool_name=request.tool_name, success=True)
+        return ToolResponse(
+            result=str(result), tool_name=request.tool_name, success=True
+        )
     except HTTPException:
         raise
     except Exception as e:

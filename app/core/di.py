@@ -42,7 +42,7 @@ def _build_cors_origins(allowed_origins: Optional[str]) -> List[str]:
 async def lifespan(app: FastAPI):
     """FastAPI lifespan handler for startup and shutdown events."""
     logger = configure_logging()
-    
+
     # Startup
     logger.info("Application startup: initializing DI placeholders")
     # Instantiate and attach concrete adapters. Import locally to avoid
@@ -78,10 +78,14 @@ async def lifespan(app: FastAPI):
             app.state.tool_registry = tool_service.tools
             logger.info("Tool registry attached to app.state")
         except Exception:
-            logger.exception("Failed to initialize ToolService; attaching empty registry")
+            logger.exception(
+                "Failed to initialize ToolService; attaching empty registry"
+            )
             app.state.tool_registry = {}
     except Exception:
-        logger.exception("Unexpected error during DI startup; leaving adapters as None/empty")
+        logger.exception(
+            "Unexpected error during DI startup; leaving adapters as None/empty"
+        )
         app.state.llm = None
         app.state.vectorstore = None
         app.state.tool_registry = {}
@@ -131,9 +135,11 @@ def create_app(custom_settings: Optional[Any] = None) -> FastAPI:
     origins = _build_cors_origins(app.state.settings.ALLOWED_ORIGINS)
 
     # Configure CORS from environment settings
-    allowed_methods = getattr(app.state.settings, 'ALLOWED_METHODS', 'GET,POST,PUT,DELETE,OPTIONS').split(',')
+    allowed_methods = getattr(
+        app.state.settings, 'ALLOWED_METHODS', 'GET,POST,PUT,DELETE,OPTIONS'
+    ).split(',')
     allowed_headers = getattr(app.state.settings, 'ALLOWED_HEADERS', '*').split(',')
-    
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins if origins != ["*"] else ["*"],
@@ -149,7 +155,9 @@ def create_app(custom_settings: Optional[Any] = None) -> FastAPI:
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
     app.include_router(mcp_server.router, prefix="/api/mcp", tags=["mcp", "tools"])
     app.include_router(logs.router, prefix="/api/logs", tags=["logs"])
-    app.include_router(tools_config.router, prefix="/api/tools", tags=["tools", "configuration"])
+    app.include_router(
+        tools_config.router, prefix="/api/tools", tags=["tools", "configuration"]
+    )
 
     return app
 
@@ -195,4 +203,10 @@ def get_agent_service(request: Request) -> Any:
             pass
 
     from app.constants import AgentConstants
-    return AgentService(mode=AgentConstants.MODE_CHAT, llm=llm, tool_service=tool_service, vectorstore=vectorstore)
+
+    return AgentService(
+        mode=AgentConstants.MODE_CHAT,
+        llm=llm,
+        tool_service=tool_service,
+        vectorstore=vectorstore,
+    )

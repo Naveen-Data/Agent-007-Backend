@@ -1,7 +1,11 @@
 from typing import Any, Dict, Optional
 
 from app.core.interfaces import ToolResult
-from app.tools_config import get_tool_availability, is_tool_enabled, get_tool_description
+from app.tools_config import (
+    get_tool_availability,
+    is_tool_enabled,
+    get_tool_description,
+)
 from app.logging_config import get_logger
 
 from app.tools.github_issues import GitHubIssuesTool
@@ -25,24 +29,25 @@ class ToolService:
             "weather": WeatherTool(),
             "http_tool": HttpTool(),
         }
-        
+
         # Filter tools based on configuration
         tool_availability = get_tool_availability()
         self.tools = {
-            name: tool for name, tool in all_tools.items() 
+            name: tool
+            for name, tool in all_tools.items()
             if tool_availability.get(name, False)
         }
-        
+
         enabled_tools = list(self.tools.keys())
         disabled_tools = [name for name in all_tools if name not in self.tools]
-        
+
         logger.info(
             "ToolService initialized",
             extra={
                 'enabled_tools': enabled_tools,
                 'disabled_tools': disabled_tools,
-                'total_available': len(all_tools)
-            }
+                'total_available': len(all_tools),
+            },
         )
 
     def get_available_tools(self) -> Dict[str, str]:
