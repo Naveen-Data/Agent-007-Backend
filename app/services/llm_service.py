@@ -203,7 +203,7 @@ Respond with valid JSON only:"""
         try:
             json.loads(content)
             return content
-        except:
+        except (json.JSONDecodeError, ValueError):
             pass
             
         # Look for JSON block between { and }
@@ -213,7 +213,7 @@ Respond with valid JSON only:"""
             try:
                 json.loads(json_str)  # Validate
                 return json_str
-            except:
+            except (json.JSONDecodeError, ValueError):
                 pass
         
         # Look for code blocks with json
@@ -223,7 +223,7 @@ Respond with valid JSON only:"""
             try:
                 json.loads(json_str)  # Validate
                 return json_str
-            except:
+            except (json.JSONDecodeError, ValueError):
                 pass
                 
         # Return original content if no valid JSON found
