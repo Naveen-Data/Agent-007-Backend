@@ -105,15 +105,16 @@ class TestAgentService:
     
     def test_agent_service_initialization(self):
         """Test that AgentService initializes correctly"""
-        agent = AgentService(mode="rag")
-        assert agent.mode == "rag"
+        from app.constants import AgentConstants
+        agent = AgentService(mode=AgentConstants.MODE_RAG)
+        assert agent.mode == AgentConstants.MODE_RAG
         assert agent.llm is not None
         assert agent.tool_service is not None
         
     def test_agent_service_tools_mode(self):
         """Test agent service in tools mode"""
-        agent = AgentService(mode="tools")
-        assert agent.mode == "tools"
+        agent = AgentService(mode=AgentConstants.MODE_TOOLS)
+        assert agent.mode == AgentConstants.MODE_TOOLS
         
     @pytest.mark.asyncio
     async def test_agent_service_mock_response(self):
@@ -121,7 +122,7 @@ class TestAgentService:
         with patch.object(LLMService, 'generate') as mock_generate:
             mock_generate.return_value = "Mock response"
             
-            agent = AgentService(mode="rag")
+            agent = AgentService(mode=AgentConstants.MODE_RAG)
             result = await agent.answer("test question")
             
             assert result == "Mock response"

@@ -19,7 +19,7 @@ class ToolExecutionResponse(BaseModel):
 
 class AgentRequest(BaseModel):
     message: str
-    mode: str = "rag"
+    mode: str = AgentConstants.MODE_CHAT
     tools_enabled: bool = True
 
 

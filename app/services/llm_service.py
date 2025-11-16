@@ -96,8 +96,12 @@ class LLMService:
 
         if embeddings_available and GoogleGenerativeAIEmbeddings is not None:
             try:
+                # Pass the API key for embeddings as well
+                embeddings_kwargs = {}
+                if getattr(settings, "GOOGLE_API_KEY", None):
+                    embeddings_kwargs["google_api_key"] = settings.GOOGLE_API_KEY
                 self._embeddings = GoogleGenerativeAIEmbeddings(
-                    model=settings.EMBEDDING_MODEL
+                    model=settings.EMBEDDING_MODEL, **embeddings_kwargs
                 )
             except Exception as e:  # pragma: no cover
                 logger.warning(
@@ -109,14 +113,10 @@ class LLMService:
     async def generate(
         self, prompt: str, max_tokens: int = 512, temperature: float = 0.2
     ) -> str:
-        """Return generated text. Uses LangChain LLM if available, otherwise returns a mock response."""
+        """Return generated text. Requires properly configured LLM."""
         if self._llm is None:
-            # mock response for local dev / CI
-            await asyncio.sleep(0.01)
-            logger.debug(
-                "LLMService.generate: returning mock response (no LLM configured)"
-            )
-            return f"[MOCK] {prompt[:200]}"
+            logger.error("LLM not configured - cannot generate text")
+            raise Exception("LLM not configured")
 
         try:
             # Most ChatGoogleGenerativeAI objects are synchronous; run in thread to avoid blocking.
@@ -141,34 +141,93 @@ class LLMService:
 
     # ---- Structured generation (Pydantic) ----
     async def generate_structured(
-        self, prompt: str, response_model: Type[T]
+        self, prompt: str, response_model: Type[T], max_retries: int = 3
     ) -> Optional[T]:
-        """Generate output and parse it into a Pydantic model using LangChain's PydanticOutputParser."""
+        """Generate output and parse it into a Pydantic model using LangChain's PydanticOutputParser with retry logic."""
         if (
             self._llm is None
             or not pydantic_parser_available
             or PydanticOutputParser is None
         ):
-            logger.debug(
-                "LLMService.generate_structured: unavailable (LLM or parser missing)"
+            logger.error(
+                "LLMService.generate_structured: required dependencies not available",
+                extra={
+                    'llm_available': self._llm is not None,
+                    'parser_available': pydantic_parser_available
+                }
             )
-            return None
+            raise Exception("Required dependencies for structured generation not available")
 
+        parser = PydanticOutputParser(pydantic_object=response_model)
+        format_instructions = parser.get_format_instructions()
+        
+        for attempt in range(max_retries):
+            try:
+                # Enhanced prompt with explicit JSON requirement
+                structured_prompt = f"""{prompt}
+
+IMPORTANT: You must respond with valid JSON that matches the required schema. Do not include any additional text, explanations, or formatting outside the JSON.
+
+{format_instructions}
+
+Respond with valid JSON only:"""
+                
+                resp = await asyncio.to_thread(self._llm.invoke, structured_prompt)
+                content = (
+                    getattr(resp, "content", None)
+                    or getattr(resp, "text", None)
+                    or str(resp)
+                ).strip()
+                
+                # Try to clean up the response if it has extra text
+                content = self._extract_json_from_response(content)
+                
+                parsed = parser.parse(content)
+                logger.debug(f"Structured generation successful on attempt {attempt + 1}")
+                return parsed
+                
+            except Exception as e:
+                logger.warning(f"Structured generation attempt {attempt + 1}/{max_retries} failed: {e}")
+                if attempt == max_retries - 1:
+                    logger.exception("All structured generation attempts failed")
+                    return None
+                    
+        return None
+
+    def _extract_json_from_response(self, content: str) -> str:
+        """Extract JSON from response that might contain extra text"""
+        import re
+        import json
+        
+        # First, try the content as-is
         try:
-            parser = PydanticOutputParser(pydantic_object=response_model)
-            format_instructions = parser.get_format_instructions()
-            structured_prompt = f"{prompt}\n\n{format_instructions}"
-            resp = await asyncio.to_thread(self._llm.invoke, structured_prompt)
-            content = (
-                getattr(resp, "content", None)
-                or getattr(resp, "text", None)
-                or str(resp)
-            )
-            parsed = parser.parse(content)
-            return parsed
-        except Exception as e:
-            logger.exception("LLMService.generate_structured failed: %s", e)
-            return None
+            json.loads(content)
+            return content
+        except:
+            pass
+            
+        # Look for JSON block between { and }
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(0)
+            try:
+                json.loads(json_str)  # Validate
+                return json_str
+            except:
+                pass
+        
+        # Look for code blocks with json
+        code_block_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if code_block_match:
+            json_str = code_block_match.group(1)
+            try:
+                json.loads(json_str)  # Validate
+                return json_str
+            except:
+                pass
+                
+        # Return original content if no valid JSON found
+        return content
 
     # ---- Embeddings ----
     async def embed(self, texts: List[str]) -> List[List[float]]:
@@ -213,6 +272,6 @@ class LLMService:
             except Exception as e:
                 logger.exception("genai embeddings call failed: %s", e)
 
-        # 3) Mock embeddings
-        logger.debug("LLMService.embed: returning mock embeddings")
-        return [[0.0] * 1 for _ in texts]
+        # No embeddings service available
+        logger.error("No embeddings service available - cannot generate embeddings")
+        raise Exception("No embeddings service available")
