@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.core.di import create_app
-from app.logging_config import setup_application_logging, get_logger
+from app.logging_config import get_logger, setup_application_logging
 from app.middleware import setup_logging_middleware
 
 # Setup comprehensive logging before app creation

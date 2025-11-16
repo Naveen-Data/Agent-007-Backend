@@ -3,11 +3,12 @@ Router for handling frontend logs and metrics
 Receives logs from frontend and stores them with backend logs
 """
 
-from fastapi import APIRouter, Request, HTTPException
-from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
 
 from app.logging_config import get_logger
 

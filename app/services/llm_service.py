@@ -202,8 +202,8 @@ Respond with valid JSON only:"""
 
     def _extract_json_from_response(self, content: str) -> str:
         """Extract JSON from response that might contain extra text"""
-        import re
         import json
+        import re
 
         # First, try the content as-is
         try:

@@ -1,7 +1,7 @@
 # Application Constants
 # Centralized constants for Agent 007 - Environment variables are kept in config.py
 
-from typing import Dict, List, Final
+from typing import Dict, Final, List
 
 # =============================================================================
 # API CONSTANTS

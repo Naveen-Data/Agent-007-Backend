@@ -49,8 +49,8 @@ async def lifespan(app: FastAPI):
     # circular imports at module import time.
     try:
         from app.services.llm_service import LLMService
-        from app.vectorstore import get_retriever
         from app.services.tool_service import ToolService
+        from app.vectorstore import get_retriever
 
         # Create LLM adapter
         try:
@@ -150,7 +150,7 @@ def create_app(custom_settings: Optional[Any] = None) -> FastAPI:
     )
 
     # include routers (imported locally to avoid circular imports with DI providers)
-    from app.routers import chat, mcp_server, logs, tools_config
+    from app.routers import chat, logs, mcp_server, tools_config
 
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
     app.include_router(mcp_server.router, prefix="/api/mcp", tags=["mcp", "tools"])

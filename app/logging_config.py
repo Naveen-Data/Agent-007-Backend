@@ -3,23 +3,23 @@ Advanced logging configuration with S3 integration for Agent 007 Backend
 Provides structured logging, automatic log rotation, and cloud storage
 """
 
+import json
 import logging
 import logging.handlers
 import os
 import sys
-import json
+import threading
+import time
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, Dict, Any
-import threading
-import time
+from typing import Any, Dict, Optional
 
 try:
-    import structlog
-    from pythonjsonlogger import json as jsonlogger
     import boto3
+    import structlog
     from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+    from pythonjsonlogger import json as jsonlogger
 
     ADVANCED_LOGGING_AVAILABLE = True
 except ImportError:
