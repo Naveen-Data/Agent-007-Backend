@@ -24,7 +24,6 @@ class Settings(BaseSettings):
     CHROMA_DIR: str = "./chroma_db"
     CHROMA_TELEMETRY_ENABLED: bool = False
 
-    # Tool selection behavior is strictly LLM-driven now.
 
     model_config = ConfigDict(
         env_file=".env",
