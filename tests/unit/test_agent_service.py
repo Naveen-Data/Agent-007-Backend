@@ -85,6 +85,7 @@ async def test_agent_service_tools_mode(monkeypatch):
 
     class MockToolService(tool_module.ToolService):
         def __init__(self):
+            super().__init__()
             self.tools = {"dummy": DummyTool()}
 
         def get_available_tools(self):  # override for simplicity
@@ -137,6 +138,7 @@ async def test_agent_service_enhanced_tools_mode():
     
     class MockEnhancedToolService(tool_module.ToolService):
         def __init__(self):
+            super().__init__()
             self.tools = {"advanced_dummy": DummyTool()}
 
         def get_available_tools(self):
