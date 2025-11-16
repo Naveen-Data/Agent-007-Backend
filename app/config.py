@@ -24,7 +24,6 @@ class Settings(BaseSettings):
     CHROMA_DIR: str = "./chroma_db"
     CHROMA_TELEMETRY_ENABLED: bool = False
 
-
     model_config = ConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
