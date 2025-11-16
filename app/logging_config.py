@@ -24,7 +24,9 @@ try:
     ADVANCED_LOGGING_AVAILABLE = True
 except ImportError:
     ADVANCED_LOGGING_AVAILABLE = False
-    logging.warning("⚠️  Advanced logging dependencies not available. Install: pip install structlog python-json-logger boto3")
+    logging.warning(
+        "⚠️  Advanced logging dependencies not available. Install: pip install structlog python-json-logger boto3"
+    )
 
 
 if ADVANCED_LOGGING_AVAILABLE:
