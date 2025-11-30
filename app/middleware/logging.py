@@ -3,23 +3,24 @@ FastAPI middleware for comprehensive request/response logging
 Tracks all HTTP requests with timing, errors, and context
 """
 
+import json
+import logging
 import time
 import uuid
-import json
 from typing import Callable
+
 from fastapi import Request, Response
 from fastapi.responses import StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-import logging
 
+from app.constants import LoggingConstants
 from app.logging_config import (
-    log_request,
-    log_response,
-    log_error,
     RequestContext,
     get_logger,
+    log_error,
+    log_request,
+    log_response,
 )
-from app.constants import LoggingConstants
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):

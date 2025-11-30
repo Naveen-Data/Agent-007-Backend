@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.core.di import get_tool_registry

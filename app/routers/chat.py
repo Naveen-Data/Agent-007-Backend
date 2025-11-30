@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
 import logging
 import time
 
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+from app.core.di import get_llm, get_tool_registry, get_vectorstore
+from app.logging_config import get_logger, log_error, log_performance
 from app.models import ChatRequest, ChatResponse, ConversationMessage
-from app.core.di import get_llm, get_vectorstore, get_tool_registry
 from app.services.agent_service import AgentService
 from app.services.tool_service import ToolService
-from app.logging_config import get_logger, log_error, log_performance
 
 router = APIRouter()
 

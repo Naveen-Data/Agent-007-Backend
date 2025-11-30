@@ -1,9 +1,9 @@
 # app/tools/weather.py
 import logging
 from typing import Any, Dict
+from urllib.parse import quote
 
 import httpx
-from urllib.parse import quote
 
 from app.tools.base import ToolSpec
 
