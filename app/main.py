@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
 from app.core.di import create_app
 from app.logging_config import get_logger, setup_application_logging
 from app.middleware import setup_logging_middleware
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Setup comprehensive logging before app creation
 logging_config = setup_application_logging()
