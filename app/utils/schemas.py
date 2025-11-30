@@ -4,6 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
+from app.constants import AgentConstants
+
 
 class ToolExecutionRequest(BaseModel):
     tool_name: str
